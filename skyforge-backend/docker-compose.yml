@@ -1,0 +1,32 @@
+services:
+  db:
+    build: ./database
+    image: drone-shop-db
+    environment:
+      POSTGRES_USER: droneshop
+      POSTGRES_PASSWORD: droneshop
+      POSTGRES_DB: droneshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U droneshop -d droneshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: ./app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://droneshop:droneshop@db:5432/droneshop
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
