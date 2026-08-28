@@ -1,6 +1,6 @@
 services:
   db:
-    build: ./database
+    build: ./skyforge-database
     image: drone-shop-db
     environment:
       POSTGRES_USER: droneshop
@@ -18,7 +18,9 @@ services:
       start_period: 10s
 
   api:
-    build: ./app
+    build:
+      context: ./skyforge-backend/app
+      dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
@@ -27,6 +29,15 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
     ports:
       - "8000:8000"
+
+  frontend:
+    build:
+      context: ./skyforge-frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
 
 volumes:
   pgdata:
